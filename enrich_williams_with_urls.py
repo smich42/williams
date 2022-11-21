@@ -6,6 +6,7 @@ import json
 
 
 def get_hits_for_stc(stc, driver, loading_seconds=5):
+
     driver.get("https://www.proquest.com/eebo/commandline")
 
     sleep(loading_seconds)
@@ -25,8 +26,7 @@ def get_hits_for_stc(stc, driver, loading_seconds=5):
     submit = driver.find_element(By.ID, "submit_5")
 
     searchbox.clear()
-    searchbox.send_keys(
-        f"COLL(Early English Books, 1475-1640 (STC)) AND NOFT(STC (2nd ed.) / {stc}.)")
+    searchbox.send_keys(f"COLL(STC) AND BIBNO({stc})")
 
     submit.click()
 
@@ -35,7 +35,10 @@ def get_hits_for_stc(stc, driver, loading_seconds=5):
 
     hits = driver.find_elements(By.ID, "citationDocTitleLink")
 
-    return [hit.get_attribute("href") for hit in hits]
+    urls = [hit.get_attribute("href") for hit in hits]
+    urls = [url.split("1?")[0] for url in urls]
+
+    return urls
 
 
 if __name__ == "__main__":
@@ -51,9 +54,7 @@ if __name__ == "__main__":
         # '{"dedicatee":"ABELL, William, Alderman (DNB).","stc_nos":{"347":[],"11347":["*"],"22532":["*"]}}'
 
         entries_json = f.read()
-
-        # Only scraping a few entries here for testing (note slice)
-        entries = json.loads(entries_json)["entries"][53:55]
+        entries = json.loads(entries_json)["entries"]
 
         for entry in entries:
             print(f"Processing dedicatee: '{entry['dedicatee']}'")
