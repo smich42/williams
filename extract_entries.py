@@ -12,6 +12,7 @@ def begins_entry(line):
     - ABBOT
     - M.
     - H.E.
+    etc.
     """
 
     if line == "" or line.isspace():
