@@ -50,7 +50,7 @@ if __name__ == "__main__":
     WILLIAMS_INPUT_PATH = "resource/williams.json"
     WILLIAMS_OUTPUT_PATH = "resource/williams_with_urls.json"
     # The number of newly updated entries required for a JSON write.
-    PROCESSED_ENTRIES_FOR_WRITE = 5
+    PROCESSED_ENTRIES_FOR_WRITE = 20
 
     driver = webdriver.Firefox()
 
