@@ -1,4 +1,0 @@
-pip install selenium
-brew install geckodriver
-pip install webdriver-manager
-
