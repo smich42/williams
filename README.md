@@ -27,7 +27,7 @@ Below is an example of the JSON output.
       }
     },
 
-    ...
+    /* ... */
 
   ]
 }
@@ -64,7 +64,7 @@ Below is an example of the JSON output. This follows a similar format to the abo
       }
     },
 
-    ...
+    /* ... */
 
   ]
 }
