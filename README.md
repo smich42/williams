@@ -25,10 +25,7 @@ Below is an example of the JSON output.
         "12345": ["verse", "*"],
         "67890": [],
       }
-    },
-
-    /* ... */
-
+    }
   ]
 }
 ```
@@ -62,10 +59,7 @@ Below is an example of the JSON output. This follows a similar format to the abo
           "https://www.proquest.com/eebo/docview/123/456/789",
         ],
       }
-    },
-
-    /* ... */
-
+    }
   ]
 }
 ```
