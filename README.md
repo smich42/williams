@@ -44,7 +44,7 @@ Below is an example of the JSON output. This follows a similar format to the abo
 
 ```JSON
 {
-  "processed": 42,
+  "processed": 1,
   "entries": [
     {
       "dedicatee": "",
