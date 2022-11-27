@@ -20,7 +20,7 @@ Below is an example of the JSON output.
 {
   "entries": [
     {
-      "dedicatee": "",
+      "dedicatee": "G. H. Dedicatee",
       "stc_nos": {
         "12345": ["verse", "*"],
         "67890": [],
@@ -34,11 +34,19 @@ Below is an example of the JSON output.
 
 `add_urls.py` reads JSON in this format, looking up each STC number on EEBO. Each STC number's attribute list is enriched with the URLs of EEBO pages possibly matching it.
 
-We resume scraping at the last processed entry by default. Use flag `'--overwrite'` to change this behaviour, e.g.: `python3 add_urls.py --overwrite`
+We resume scraping at the last processed entry by default. Use flag `--overwrite` (or `-W`) to change this behaviour, e.g.: `python3 add_urls.py --overwrite`
 
-To avoid authorisation issues with EEBO, the script initially asks that you use the scraping window to log in with a user account. 90 seconds are allocated for this by default, and scraping begins automatically after this time elapses. Use flag `--login-timer <seconds>` to change this behaviour.
+To avoid authorisation issues with EEBO, the script initially asks that you use the scraping window to log in with a user account. 90 seconds are allocated for this by default, and scraping begins automatically after this time elapses. Use flag `--login-timer <seconds>` (or `-T`) to change this behaviour.
 
-The input and output files can be specified with `--inf` and `--outf`: looks for `resource/williams.json` and `resource/williams_with_urls.json` by default.
+The input and output files can be specified with `--inf <path>` (or `-I`) and `--outf <path>` (or `-O`). The scraper looks for `resource/williams.json` and `resource/williams_with_urls.json` by default.
+
+The frequency at which changes are saved to disc may be modified with `--save-every <num>` (or `-S`). This indicates how many entries must be scraped to initiate a write to the output file.
+
+To illustrate, the script could be run as follows.
+
+```Bash
+python3 add_urls.py --overwrite --login-timer 30 --outf custom/output/file.json --save-every 10
+```
 
 Below is an example of the JSON output. This follows a similar format to the above; note the field `processed` in the root element, which indicates how many of the entries below have been processed by the scraper.
 
@@ -47,7 +55,7 @@ Below is an example of the JSON output. This follows a similar format to the abo
   "processed": 1,
   "entries": [
     {
-      "dedicatee": "",
+      "dedicatee": "G. H. Dedicatee",
       "stc_nos": {
         "12345": [
           "https://www.proquest.com/eebo/docview/111/222/333/",
