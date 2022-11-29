@@ -2,8 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from time import sleep
+from os import path
 import json
-import sys
 import argparse
 
 
@@ -57,6 +57,45 @@ def write_entries_to_file(entries, previously_processed, save_path):
           f"({len(entries) - previously_processed} remaining.)")
 
 
+def retrieve_partially_processed(out_path):
+
+    if not path.exists(out_path):
+        return None, 0
+
+    with open(out_path, "r") as outf:
+        out_json = outf.read()
+        # Field "processed" in the JSON is used to save the number of scraped entries.
+        # If this exists, it indicates where we restart execution from.
+        try:
+            previously_processed = int(json.loads(out_json)["processed"])
+            if previously_processed > 0:
+                return json.loads(out_json)["entries"], previously_processed
+
+        except json.decoder.JSONDecodeError:
+            # No 'processed' field detected, so nowhere to resume from.
+            pass
+
+    return None, 0
+
+
+def retrieve_entries(in_path, out_path, overwrite=False):
+
+    entries = None
+    # Try to resume processing.
+    if not overwrite:
+        entries, previously_processed = retrieve_partially_processed(out_path)
+
+        if entries is not None:
+            return entries, previously_processed
+
+    # Processing not resumed, or user asked to overwrite; read from unprocessed Williams entries
+    with open(in_path, "r") as inf:
+        in_json = inf.read()
+        entries = json.loads(in_json)["entries"]
+
+    return entries, 0
+
+
 def scrape_entry_urls(entries, driver, previously_processed, save_every, save_path):
 
     print(f"Beginning at entry {previously_processed + 1}.")
@@ -97,41 +136,14 @@ if __name__ == "__main__":
 
     driver = webdriver.Firefox()
 
-    request_user_login(driver, login_timer=args.login_timer)
+    try:
+        request_user_login(driver, login_timer=args.login_timer)
+        # Well-behaved test entry:
+        # '{"dedicatee":"ABELL, William, Alderman (DNB).","stc_nos":{"347":[],"11347":["*"],"22532":["*"]}}'
+        entries, previously_processed = retrieve_entries(args.inf, args.outf,
+                                                         overwrite=args.overwrite)
+        scrape_entry_urls(entries, driver, previously_processed,
+                          args.save_every, args.outf)
 
-    # Well-behaved test entry:
-    # '{"dedicatee":"ABELL, William, Alderman (DNB).","stc_nos":{"347":[],"11347":["*"],"22532":["*"]}}'
-    entries = {}
-    previously_processed = 0
-
-    # Ensure `outf` exists; if so do not modify.
-    open(args.outf, "a").close()
-
-    with open(args.inf, "r") as inf, open(args.outf, "r") as outf:
-        # This flag indicates whether we resume scraping from a certain point in the entry list
-        # or start from the beginning.
-        resume = False
-
-        if not args.overwrite:
-            # Attempt to resume execution.
-            out_json = outf.read()
-            # Field "processed" in the JSON is used to save the number of scraped entries.
-            # If this is greater than zero, then enable the `resume` flag.
-            try:
-                previously_processed = int(json.loads(out_json)["processed"])
-                if (previously_processed > 0):
-                    resume = True
-            except json.decoder.JSONDecodeError:
-                # No 'processed' field detected, so nowhere to resume from.
-                pass
-
-        if resume:
-            entries = json.loads(out_json)["entries"]
-        else:
-            in_json = inf.read()
-            entries = json.loads(in_json)["entries"]
-
-    scrape_entry_urls(entries, driver, previously_processed,
-                      args.save_every, args.outf)
-
-    driver.close()
+    finally:
+        driver.close()
