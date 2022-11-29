@@ -63,13 +63,13 @@ def retrieve_partially_processed(out_path):
         return None, 0
 
     with open(out_path, "r") as outf:
-        out_json = outf.read()
+        out_json = json.loads(outf.read())
         # Field "processed" in the JSON is used to save the number of scraped entries.
         # If this exists, it indicates where we restart execution from.
         try:
-            previously_processed = int(json.loads(out_json)["processed"])
+            previously_processed = int(out_json["processed"])
             if previously_processed > 0:
-                return json.loads(out_json)["entries"], previously_processed
+                return out_json["entries"], previously_processed
 
         except json.decoder.JSONDecodeError:
             # No 'processed' field detected, so nowhere to resume from.
@@ -90,8 +90,8 @@ def retrieve_entries(in_path, out_path, overwrite=False):
 
     # Processing not resumed, or user asked to overwrite; read from unprocessed Williams entries
     with open(in_path, "r") as inf:
-        in_json = inf.read()
-        entries = json.loads(in_json)["entries"]
+        in_json = json.loads(inf.read())
+        entries = in_json["entries"]
 
     return entries, 0
 
