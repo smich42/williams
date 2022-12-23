@@ -57,12 +57,12 @@ def write_entries_to_file(entries, previously_processed, save_path):
           f"({len(entries) - previously_processed} remaining.)")
 
 
-def retrieve_partially_processed(out_path):
+def retrieve_partially_processed(url_path):
 
-    if not path.exists(out_path):
+    if not path.exists(url_path):
         return None, 0
 
-    with open(out_path, "r") as outf:
+    with open(url_path, "r") as outf:
         out_json = json.loads(outf.read())
         # Field "processed" in the JSON is used to save the number of scraped entries.
         # If this exists, it indicates where we restart execution from.
@@ -78,18 +78,18 @@ def retrieve_partially_processed(out_path):
     return None, 0
 
 
-def retrieve_entries(in_path, out_path, overwrite=False):
+def retrieve_entries(plain_path, url_path, overwrite=False):
 
     entries = None
     # Try to resume processing.
     if not overwrite:
-        entries, previously_processed = retrieve_partially_processed(out_path)
+        entries, previously_processed = retrieve_partially_processed(url_path)
 
         if entries is not None:
             return entries, previously_processed
 
     # Processing not resumed, or user asked to overwrite; read from unprocessed Williams entries
-    with open(in_path, "r") as inf:
+    with open(plain_path, "r") as inf:
         in_json = json.loads(inf.read())
         entries = in_json["entries"]
 
@@ -123,15 +123,15 @@ def scrape_entry_urls(entries, driver, previously_processed, save_every, save_pa
 
 if __name__ == "__main__":
 
-    WILLIAMS_INPUT_PATH_DEFAULT = "resource/williams.json"
-    WILLIAMS_OUTPUT_PATH_DEFAULT = "resource/williams_with_urls.json"
+    WILLIAMS_PLAIN_PATH = "resource/williams.json"
+    WILLIAMS_URL_PATH = "resource/williams_with_urls.json"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-W", "--overwrite", action="store_true")
     parser.add_argument("-T", "--login-timer", type=int, default=90)
     parser.add_argument("-S", "--save-every", type=int, default=20)
-    parser.add_argument("-I", "--inf", default=WILLIAMS_INPUT_PATH_DEFAULT)
-    parser.add_argument("-O", "--outf", default=WILLIAMS_OUTPUT_PATH_DEFAULT)
+    parser.add_argument("-I", "--inf", default=WILLIAMS_PLAIN_PATH)
+    parser.add_argument("-O", "--outf", default=WILLIAMS_URL_PATH)
     args = parser.parse_args()
 
     driver = webdriver.Firefox()
