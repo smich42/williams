@@ -1,27 +1,18 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
 from time import sleep
-from os import path
 import json
 import argparse
+import eebo_helper
 
 
-def get_hits_for_stc(stc, driver, loading_seconds=5):
+def scrape_result_urls(stc, driver, loading_seconds=5):
 
     driver.get("https://www.proquest.com/eebo/commandline")
 
     sleep(loading_seconds)
 
-    try:
-        reject_cookies = driver.find_element(By.ID,
-                                             "onetrust-reject-all-handler")
-        reject_cookies.click()
-        sleep(loading_seconds)
-
-    except NoSuchElementException:
-        # No cookies prompt on the page
-        pass
+    eebo_helper.reject_cookies_if_present(driver)
 
     searchbox = driver.find_element(By.ID, "searchTerm")
     submit = driver.find_element(By.ID, "submit_5")
@@ -34,10 +25,10 @@ def get_hits_for_stc(stc, driver, loading_seconds=5):
     # Ensure results load
     sleep(loading_seconds)
 
-    return [hit.get_attribute("href") for hit in driver.find_elements(By.ID, "citationDocTitleLink")]
+    return [hit.get_attribute("href") for hit in driver.find_elements(By.XPATH, "//*[starts-with(@id, 'citationDocTitleLink')]")]
 
 
-def request_user_login(driver, login_timer):
+def request_login(driver, login_timer):
 
     driver.get("https://www.proquest.com/eebo/myresearch/signin")
 
@@ -45,7 +36,7 @@ def request_user_login(driver, login_timer):
     sleep(login_timer)
 
 
-def write_entries_to_file(entries, previously_processed, save_path):
+def write_entries(entries, previously_processed, save_path):
 
     with open(save_path, "w") as f:
         f.write(json.dumps({
@@ -57,46 +48,22 @@ def write_entries_to_file(entries, previously_processed, save_path):
           f"({len(entries) - previously_processed} remaining.)")
 
 
-def retrieve_partially_processed(url_path):
-
-    if not path.exists(url_path):
-        return None, 0
-
-    with open(url_path, "r") as outf:
-        out_json = json.loads(outf.read())
-        # Field "processed" in the JSON is used to save the number of scraped entries.
-        # If this exists, it indicates where we restart execution from.
-        try:
-            previously_processed = int(out_json["processed"])
-            if previously_processed > 0:
-                return out_json["entries"], previously_processed
-
-        except json.decoder.JSONDecodeError:
-            # No 'processed' field detected, so nowhere to resume from.
-            pass
-
-    return None, 0
-
-
-def retrieve_entries(plain_path, url_path, overwrite=False):
+def get_entries(path_for_plain, path_for_urls, overwrite=False):
 
     entries = None
     # Try to resume processing.
     if not overwrite:
-        entries, previously_processed = retrieve_partially_processed(url_path)
+        entries, previously_processed = eebo_helper.read_url_entries_file(
+            path_for_urls)
 
         if entries is not None:
             return entries, previously_processed
 
     # Processing not resumed, or user asked to overwrite; read from unprocessed Williams entries
-    with open(plain_path, "r") as inf:
-        in_json = json.loads(inf.read())
-        entries = in_json["entries"]
-
-    return entries, 0
+    return eebo_helper.read_plain_entries_file(path_for_plain), 0
 
 
-def scrape_entry_urls(entries, driver, previously_processed, save_every, save_path):
+def add_urls(entries, driver, previously_processed, save_every, save_path):
 
     print(f"Beginning at entry {previously_processed + 1}.")
 
@@ -106,7 +73,7 @@ def scrape_entry_urls(entries, driver, previously_processed, save_every, save_pa
         print(f"Processing dedicatee: '{entry['dedicatee']}'")
 
         for stc in entry["stc_nos"].keys():
-            hits = get_hits_for_stc(stc, driver)
+            hits = scrape_result_urls(stc, driver)
             # Insert a JSON array of urls to the beginning of the entry attributes list.
             entry["stc_nos"][stc].insert(0, hits)
 
@@ -118,7 +85,7 @@ def scrape_entry_urls(entries, driver, previously_processed, save_every, save_pa
         processed += 1
 
         if processed % save_every == 0 or processed == len(entries):
-            write_entries_to_file(entries, processed, save_path)
+            write_entries(entries, processed, save_path)
 
 
 if __name__ == "__main__":
@@ -137,13 +104,13 @@ if __name__ == "__main__":
     driver = webdriver.Firefox()
 
     try:
-        request_user_login(driver, login_timer=args.login_timer)
+        request_login(driver, login_timer=args.login_timer)
         # Well-behaved test entry:
         # '{"dedicatee":"ABELL, William, Alderman (DNB).","stc_nos":{"347":[],"11347":["*"],"22532":["*"]}}'
-        entries, previously_processed = retrieve_entries(args.inf, args.outf,
-                                                         overwrite=args.overwrite)
-        scrape_entry_urls(entries, driver, previously_processed,
-                          args.save_every, args.outf)
+        entries, previously_processed = get_entries(args.inf, args.outf,
+                                                    overwrite=args.overwrite)
+        add_urls(entries, driver, previously_processed,
+                 args.save_every, args.outf)
 
     finally:
         driver.close()
