@@ -5,6 +5,14 @@ from os import path
 import json
 
 
+def redirect_to_login(driver, login_timer):
+
+    driver.get("https://www.proquest.com/eebo/myresearch/signin")
+
+    print("Please log in.", login_timer, "seconds allocated.")
+    sleep(login_timer)
+
+
 def reject_cookies_if_present(driver, loading_seconds=5):
 
     try:

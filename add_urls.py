@@ -28,14 +28,6 @@ def scrape_result_urls(stc, driver, loading_seconds=5):
     return [hit.get_attribute("href") for hit in driver.find_elements(By.XPATH, "//*[starts-with(@id, 'citationDocTitleLink')]")]
 
 
-def request_login(driver, login_timer):
-
-    driver.get("https://www.proquest.com/eebo/myresearch/signin")
-
-    print("Please log in.", login_timer, "seconds allocated.")
-    sleep(login_timer)
-
-
 def write_entries(entries, previously_processed, save_path):
 
     with open(save_path, "w") as f:
@@ -104,7 +96,7 @@ if __name__ == "__main__":
     driver = webdriver.Firefox()
 
     try:
-        request_login(driver, login_timer=args.login_timer)
+        eebo_helper.redirect_to_login(driver, login_timer=args.login_timer)
         # Well-behaved test entry:
         # '{"dedicatee":"ABELL, William, Alderman (DNB).","stc_nos":{"347":[],"11347":["*"],"22532":["*"]}}'
         entries, previously_processed = get_entries(args.inf, args.outf,
