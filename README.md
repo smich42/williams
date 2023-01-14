@@ -58,13 +58,15 @@ Below is an example of the JSON output. This follows a similar format to the abo
       "dedicatee": "G. H. Dedicatee",
       "stc_nos": {
         "12345": [
-          "https://www.proquest.com/eebo/docview/111/222/333/",
-          "https://www.proquest.com/eebo/docview/444/555/666",
-          "https://www.proquest.com/eebo/docview/777/888/999/",
+          [
+            "https://www.proquest.com/eebo/docview/111/222/333/",
+            "https://www.proquest.com/eebo/docview/444/555/666",
+            "https://www.proquest.com/eebo/docview/777/888/999/",
+          ],
           "verse",
           "*"],
         "67890": [
-          "https://www.proquest.com/eebo/docview/123/456/789",
+          ["https://www.proquest.com/eebo/docview/123/456/789"],
         ],
       }
     }
