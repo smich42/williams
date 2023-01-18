@@ -38,7 +38,7 @@ We resume scraping at the last processed entry by default. Use flag `--overwrite
 
 To avoid authorisation issues with EEBO, the script initially asks that you use the scraping window to log in with a user account. 90 seconds are allocated for this by default, and scraping begins automatically after this time elapses. Use flag `--login-timer <seconds>` (or `-T`) to change this behaviour.
 
-The input and output files can be specified with `--inf <path>` (or `-I`) and `--outf <path>` (or `-O`). The scraper looks for `resource/williams.json` and `resource/williams_with_urls.json` by default.
+The input and output files can be specified with `--inf <path>` (or `-I`) and `--outf <path>` (or `-O`). The scraper looks for `resource/williams.json` and `resource/williams_with_urls.json` by default. Specify the backup path with `--backf <path>` (or `-B`). By default this is `resource/williams_with_urls-old.json`
 
 The frequency at which changes are saved to disc may be modified with `--save-every <num>` (or `-S`). This indicates how many entries must be scraped to initiate a write to the output file.
 
