@@ -5,6 +5,7 @@ from os import path
 import json
 import argparse
 import eebo_helper
+import warnings
 
 
 def scrape_result_urls(stc, driver, loading_seconds=5):
@@ -103,6 +104,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     driver = webdriver.Firefox()
+
+    args.outf = path.normpath(args.outf)
+    args.backf = path.normpath(args.backf)
+
+    if args.outf == args.backf:
+        warnings.warn(
+            f"Backup path configured to be the same as save path: '{args.outf}'")
 
     try:
         eebo_helper.redirect_to_login(driver, login_timer=args.login_timer)
