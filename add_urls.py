@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from time import sleep
+from os import path
 import json
 import argparse
 import eebo_helper
@@ -28,8 +29,14 @@ def scrape_result_urls(stc, driver, loading_seconds=5):
     return [hit.get_attribute("href") for hit in driver.find_elements(By.XPATH, "//*[starts-with(@id, 'citationDocTitleLink')]")]
 
 
-def write_entries(entries, previously_processed, save_path):
+def write_entries(entries, previously_processed, save_path, backup_path):
 
+    # If we have an output file already, create a backup before overwriting.
+    if path.exists(save_path):
+        with open(save_path, "r") as sf, open(backup_path, "w") as bf:
+            bf.write(sf.read())
+
+    # Overwrite the old output file.
     with open(save_path, "w") as f:
         f.write(json.dumps({
             "processed": previously_processed,
@@ -55,7 +62,7 @@ def get_entries(path_for_plain, path_for_urls, overwrite=False):
     return eebo_helper.read_plain_entries_file(path_for_plain), 0
 
 
-def add_urls(entries, driver, previously_processed, save_every, save_path):
+def add_urls(entries, driver, previously_processed, save_every, save_path, backup_path):
 
     print(f"Beginning at entry {previously_processed + 1}.")
 
@@ -77,13 +84,14 @@ def add_urls(entries, driver, previously_processed, save_every, save_path):
         processed += 1
 
         if processed % save_every == 0 or processed == len(entries):
-            write_entries(entries, processed, save_path)
+            write_entries(entries, processed, save_path, backup_path)
 
 
 if __name__ == "__main__":
 
     WILLIAMS_PLAIN_PATH = "resource/williams.json"
     WILLIAMS_URL_PATH = "resource/williams_with_urls.json"
+    WILLIAMS_BACKUP_PATH = "resource/williams_with_urls-old.json"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-W", "--overwrite", action="store_true")
@@ -91,6 +99,7 @@ if __name__ == "__main__":
     parser.add_argument("-S", "--save-every", type=int, default=20)
     parser.add_argument("-I", "--inf", default=WILLIAMS_PLAIN_PATH)
     parser.add_argument("-O", "--outf", default=WILLIAMS_URL_PATH)
+    parser.add_argument("-B", "--backf", default=WILLIAMS_BACKUP_PATH)
     args = parser.parse_args()
 
     driver = webdriver.Firefox()
@@ -102,7 +111,7 @@ if __name__ == "__main__":
         entries, previously_processed = get_entries(args.inf, args.outf,
                                                     overwrite=args.overwrite)
         add_urls(entries, driver, previously_processed,
-                 args.save_every, args.outf)
+                 args.save_every, args.outf, args.backf)
 
     finally:
         driver.close()
