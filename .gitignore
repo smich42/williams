@@ -129,5 +129,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-resource/williams_with_urls.json
-resource/williams_with_urls-old.json
