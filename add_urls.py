@@ -53,14 +53,14 @@ def get_entries(path_for_plain, path_for_urls, overwrite=False):
     entries = None
     # Try to resume processing.
     if not overwrite:
-        entries, previously_processed = eebo_helper.read_url_entries_file(
+        entries, previously_processed = eebo_helper.read_processed_entries_only(
             path_for_urls)
 
         if entries is not None:
             return entries, previously_processed
 
     # Processing not resumed, or user asked to overwrite; read from unprocessed Williams entries
-    return eebo_helper.read_plain_entries_file(path_for_plain), 0
+    return eebo_helper.read_entries(path_for_plain), 0
 
 
 def add_urls(entries, driver, previously_processed, save_every, save_path, backup_path):
