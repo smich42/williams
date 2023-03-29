@@ -13,27 +13,33 @@ def redirect_to_login(driver, login_timer):
     sleep(login_timer)
 
 
-def reject_cookies_if_present(driver, loading_seconds=5):
-
+def click_by_id_if_present(id, driver, loading_seconds):
+    # Finds the element with the given ID and clicks it.
     try:
-        reject_btn = driver.find_element(By.ID,
-                                         "onetrust-reject-all-handler")
-        reject_btn.click()
+        clickable = driver.find_element(By.ID, id)
+        clickable.click()
+
         sleep(loading_seconds)
 
     except NoSuchElementException:
-        # No cookies prompt on the page
+        # Element not found in page.
         pass
 
 
-def read_plain_entries_file(json_path):
+def reject_cookies_if_present(driver, loading_seconds=5):
+
+    click_by_id_if_present("onetrust-reject-all-handler",
+                           driver, loading_seconds=loading_seconds)
+
+
+def read_entries(json_path):
 
     with open(json_path, "r") as inf:
         in_json = json.loads(inf.read())
         return in_json["entries"]
 
 
-def read_url_entries_file(json_path):
+def read_processed_entries_only(json_path):
 
     if path.exists(json_path):
         with open(json_path, "r") as outf:
