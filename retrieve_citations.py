@@ -1,8 +1,10 @@
+import argparse
 import csv
+from os import path
 import eebo_helper
-from selenium import webdriver
 from time import sleep
 from bs4 import BeautifulSoup
+from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from json import dumps
@@ -116,23 +118,43 @@ def scrape_citation_table(driver, url, stc, loading_seconds=5):
     return None
 
 
-def write_citations(citations, save_path, backup_path):
+def save_citation(citation, save_path):
+
+    with open(save_path, "a") as outf:
+        writer = csv.DictWriter(outf, fieldnames=Citation.fieldnames())
+        writer.writerow(citation.as_dict())
+
+        print(
+            f"Appended citation for STC number '{citation.stc}' to '{save_path}'.")
+
+
+def create_save_file(save_path):
 
     with open(save_path, "w") as outf:
         writer = csv.DictWriter(outf, fieldnames=Citation.fieldnames())
         writer.writeheader()
-        writer.writerows([citation.as_dict() for citation in citations])
 
-        print(f"Wrote {len(citations)} citation(s) to '{save_path}'.")
+        print(f"Wrote header to '{save_path}'.")
 
 
-def find_and_write_citations(entries, driver, save_every, save_path, backup_path):
+def linecnt(filepath):
 
-    citations = []
+    with open(filepath) as f:
+        return sum(1 for _ in f)
+
+
+def find_and_write_citations(entries, driver, save_path, overwrite=False):
+
+    previously_processed = linecnt(save_path) - 1
+
+    if previously_processed <= 0:
+        create_save_file(save_path)
+
+    print(f"Beginning at entry {previously_processed}.")
 
     # Recall that each entry is a dictionary where each key as an stc number
     # And each value a list of dedication details.
-    for entry in entries:
+    for entry in entries[previously_processed:]:
         dedicatee = entry["dedicatee"]
 
         for stc, details in entry["stc_nos"].items():
@@ -146,18 +168,29 @@ def find_and_write_citations(entries, driver, save_every, save_path, backup_path
                     print(f"Skipped '{url}'.")
                     continue
 
-                citations.append(Citation(dedicatee, stc, table))
-
-                if len(citations) % save_every == 0 and len(citations) > 0:
-                    write_citations(citations, save_path, backup_path)
+                save_citation(Citation(dedicatee, stc, table), save_path)
 
 
 if __name__ == "__main__":
 
     WILLIAMS_URL_PATH = "resource/williams_with_urls.json"
-    WILLIAMS_DETAILS_PATH = "resource/williams_with_details.json"
+    WILLIAMS_DETAILS_PATH = "resource/citations.csv"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-W", "--overwrite", action="store_true")
+    parser.add_argument("-T", "--login-timer", type=int, default=90)
+    parser.add_argument("-I", "--inf", default=WILLIAMS_URL_PATH)
+    parser.add_argument("-O", "--outf", default=WILLIAMS_DETAILS_PATH)
+    args = parser.parse_args()
 
     driver = webdriver.Firefox()
-    entries = eebo_helper.read_entries(WILLIAMS_URL_PATH)
 
-    find_and_write_citations(entries, driver, 1, "resource/citations.csv", "")
+    try:
+        eebo_helper.redirect_to_login(driver, login_timer=args.login_timer)
+        entries = eebo_helper.read_entries(args.inf)
+
+        find_and_write_citations(entries, driver, args.outf,
+                                 overwrite=args.overwrite)
+
+    finally:
+        driver.close()
