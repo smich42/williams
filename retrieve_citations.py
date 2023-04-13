@@ -145,7 +145,7 @@ def linecnt(filepath):
 
 def find_and_write_citations(entries, driver, save_path, overwrite=False):
 
-    previously_processed = linecnt(save_path) - 1
+    previously_processed = 0 if overwrite else linecnt(save_path) - 1
 
     if previously_processed <= 0:
         create_save_file(save_path)
