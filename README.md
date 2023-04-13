@@ -30,7 +30,7 @@ Below is an example of the JSON output.
 }
 ```
 
-## Using the EEBO scraper
+## Using the EEBO entry scraper
 
 `add_urls.py` reads JSON in this format, looking up each STC number on EEBO. Each STC number's attribute list is enriched with the URLs of EEBO pages possibly matching it.
 
@@ -74,3 +74,23 @@ Below is an example of the JSON output. This follows a similar format to the abo
   ]
 }
 ```
+
+## Using the EEBO citation scraper
+
+`retrieve_citations.py` looks at a given URL-enriched JSON file as above, follows each link and retrieves the citation details associated with it.
+The results are written to disc as CSV values.
+
+If the specified output file already exists, the script resumes processing after the last processed entry in it. This behaviour can be changed by setting the `--overwrite` (or `-W`) flag.
+
+The script also asks the user to log in. Again, this is not mandatory. Change the time window given to log in with flag `--login-timer <seconds>` (or `-T`).
+
+Lastly, the input and output files can be specified with `--inf <path>` (or `-I`) and `--outf <path>` (or `-O`). The scraper looks for `resource/williams_with_urls.json` and `resource/citations.csv` by default.
+
+The resulting CSV looks as follows.
+
+| Dedicatee  | STC number  | Title  | Title (other)  | USTC classification  | Author  | Author(s) (other)  | Date of publication  | Printer/publisher  | Language of publication  |
+|---|---|---|---|---|---|---|---|---|---|
+|   |   |   |   | . . .  |   |   |   |   |   |
+| ELIZABETH I, Queen. | 17320 | A godly medytacyon of the christen sowle, concerninge a loue towardes God and hys Christe, compyled in frenche [...]  | Miroir de lâme pécherresse.  |  Women in publishing; Religious | Marguerite, Queen, consort of Henry II, King of Navarre, 1492-1549.  | Bale, John, 1495-1563.; Elizabeth I, Queen of England, 1533-1603.  | 1548  | Imprented [by Dirik van der Straten]  | English  |
+| ELIZABETH I, Queen.  | 4939  | In laudem Henrici Octaui, Regis Angliæ præstantis. carmen panegiricum  |   | Poetry  | Chaloner, Thomas, Sir, 1521-1565.  |   | 1560  | [J. Day]  |  Latin |
+|   |   |   |   | . . .  |   |   |   |   |   |
