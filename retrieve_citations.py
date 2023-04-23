@@ -137,15 +137,19 @@ def create_save_file(save_path):
         print(f"Wrote header to '{save_path}'.")
 
 
-def linecnt(filepath):
+def csv_linecount(filepath):
 
-    with open(filepath) as f:
-        return sum(1 for _ in f)
+    if not path.exists(filepath):
+        return 0
+
+    with open(filepath, "r") as f:
+        # Subtract 1 for the header.
+        return sum(1 for _ in f) - 1
 
 
 def find_and_write_citations(entries, driver, save_path, overwrite=False):
 
-    previously_processed = 0 if overwrite else linecnt(save_path) - 1
+    previously_processed = 0 if overwrite else csv_linecount(save_path)
 
     if previously_processed <= 0:
         create_save_file(save_path)
