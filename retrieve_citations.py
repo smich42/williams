@@ -13,6 +13,17 @@ from json import dumps
 class Citation:
     # Represents an EEBO entry and its details.
 
+    CSV_COLNAME_DEDICATEE = "Dedicatee"
+    CSV_COLNAME_STC = "STC number"
+    CSV_COLNAME_TITLE = "Title"
+    CSV_COLNAME_TITLE_OTHER = "Title (other)"
+    CSV_COLNAME_USTC_CLASS = "USTC classification"
+    CSV_COLNAME_AUTHOR = "Author"
+    CSV_COLNAME_AUTHOR_OTHER = "Author(s) (other)"
+    CSV_COLNAME_DATE_OF_PUB = "Date of publication"
+    CSV_COLNAME_PRINTER_PUBLISHER = "Printer/publisher"
+    CSV_COLNAME_PUB_LANGUAGE = "Language of publication"
+
     def __init__(self, dedicatee, stc, citation_table):
 
         if citation_table is None:
@@ -32,37 +43,52 @@ class Citation:
     def fieldnames():
 
         return [
-            "Dedicatee",
-            "STC number",
-            "Title",
-            "Title (other)",
-            "USTC classification",
-            "Author",
-            "Author(s) (other)",
-            "Date of publication",
-            "Printer/publisher",
-            "Language of publication"
+            Citation.CSV_COLNAME_DEDICATEE,
+            Citation.CSV_COLNAME_STC,
+            Citation.CSV_COLNAME_TITLE,
+            Citation.CSV_COLNAME_TITLE_OTHER,
+            Citation.CSV_COLNAME_USTC_CLASS,
+            Citation.CSV_COLNAME_AUTHOR,
+            Citation.CSV_COLNAME_AUTHOR_OTHER,
+            Citation.CSV_COLNAME_DATE_OF_PUB,
+            Citation.CSV_COLNAME_PRINTER_PUBLISHER,
+            Citation.CSV_COLNAME_PUB_LANGUAGE
         ]
 
-    def as_dict(self):
+    def to_dict(citation):
 
         return {
             field: val for field, val in zip(Citation.fieldnames(), [
-                self.dedicatee,
-                self.stc,
-                self.title,
-                self.title_other,
-                self.ustc_class,
-                self.author,
-                self.authors_other,
-                self.date_pub,
-                self.printpub,
-                self.language
+                citation.dedicatee,
+                citation.stc,
+                citation.title,
+                citation.title_other,
+                citation.ustc_class,
+                citation.author,
+                citation.authors_other,
+                citation.date_pub,
+                citation.printpub,
+                citation.language
             ])}
+
+    def from_dict(dict):
+        citation = Citation(
+            dict[Citation.CSV_COLNAME_DEDICATEE], dict[Citation.CSV_COLNAME_STC], None)
+
+        citation.title = dict[Citation.CSV_COLNAME_TITLE]
+        citation.title_other = dict[Citation.CSV_COLNAME_TITLE_OTHER]
+        citation.ustc_class = dict[Citation.CSV_COLNAME_USTC_CLASS]
+        citation.author = dict[Citation.CSV_COLNAME_AUTHOR]
+        citation.authors_other = dict[Citation.CSV_COLNAME_AUTHOR_OTHER]
+        citation.date_pub = dict[Citation.CSV_COLNAME_DATE_OF_PUB]
+        citation.printpub = dict[Citation.CSV_COLNAME_PRINTER_PUBLISHER]
+        citation.language = dict[Citation.CSV_COLNAME_PUB_LANGUAGE]
+
+        return citation
 
     def __str__(self):
 
-        return dumps(self.as_dict(), indent=4)
+        return dumps(Citation.to_dict(self), indent=4)
 
 
 def show_document_formats_if_present(driver, loading_seconds=5):
@@ -122,7 +148,7 @@ def save_citation(citation, save_path):
 
     with open(save_path, "a") as outf:
         writer = csv.DictWriter(outf, fieldnames=Citation.fieldnames())
-        writer.writerow(citation.as_dict())
+        writer.writerow(Citation.to_dict(citation))
 
         print(
             f"Appended citation for STC number '{citation.stc}' to '{save_path}'.")
@@ -137,31 +163,47 @@ def create_save_file(save_path):
         print(f"Wrote header to '{save_path}'.")
 
 
-def csv_linecount(filepath):
+def last_citation_saved(save_path):
 
-    if not path.exists(filepath):
-        return 0
+    if not path.exists(save_path):
+        return None
 
-    with open(filepath, "r") as f:
-        # Subtract 1 for the header.
-        return sum(1 for _ in f) - 1
+    with open(save_path, "r") as f:
+        reader = csv.DictReader(f, fieldnames=Citation.fieldnames())
+        rows = list(reader)
+
+        if len(rows) > 1:
+            return Citation.from_dict(rows[-1])
 
 
 def find_and_write_citations(entries, driver, save_path, overwrite=False):
 
-    previously_processed = 0 if overwrite else csv_linecount(save_path)
-
-    if previously_processed <= 0:
+    if overwrite or not path.exists(save_path):
         create_save_file(save_path)
 
-    print(f"Beginning at entry {previously_processed}.")
+    last_processed = last_citation_saved(save_path)
+    encountered_last_processed = False
+
+    if last_processed != None:
+        print(
+            f"Beginning after entry '{last_processed.dedicatee}': '{last_processed.stc}'.")
+    else:
+        print("Beginning from first entry.")
+        encountered_last_processed = True
 
     # Recall that each entry is a dictionary where each key as an stc number
     # And each value a list of dedication details.
-    for entry in entries[previously_processed:]:
+    for entry in entries:
         dedicatee = entry["dedicatee"]
 
         for stc, details in entry["stc_nos"].items():
+
+            if not encountered_last_processed:
+                if last_processed.dedicatee == dedicatee and last_processed.stc == stc:
+                    encountered_last_processed = True
+
+                continue
+
             print(f"Processing [{dedicatee} : {stc}].")
             # The first element in the dedication details is a list of all its potentially matching urls.
             for url in details[0]:
