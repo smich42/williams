@@ -14,14 +14,11 @@ def begins_entry(line):
     - H.E.
     etc.
     """
-
     if line == "" or line.isspace():
         return False
-
     # Do not allow "lastname" or "lASTNAME"
     if not line[0].isupper():
         return False
-
     # Do not allow "Lastname"
     if line[0].isupper() and line[1].islower():
         return False
@@ -37,7 +34,6 @@ def extract_dedicatee(line):
     Returns the part of the line relating to the dedicatee's name
     and origin or occupation.
     """
-
     parts = line.split(".")
     dedicatee = parts[0] + "."
 
@@ -83,7 +79,6 @@ def extract_stcs(line):
     """
     Produces a dictionary of all STC numbers and their tags contained in the line.
     """
-
     # Tags are: prose, verse, epistle, edits, by editor,
     # or any of ",r", "t", "*" followed by a number or another of those symbols.
     # OCR is not ideal so the paragraph symbol is ",r", the cross is "t" and the star "*".
@@ -118,7 +113,6 @@ def extract_stcs(line):
 
 
 def generate_digit_misreadings(text, substitutions):
-
     misreading_pos = find_next_near_digits(text, substitutions.keys())
 
     if misreading_pos == -1:
@@ -145,9 +139,9 @@ def find_next_near_digits(text, chars_to_match):
         adjacent_to_digit = False
 
         if i > 0:
-            adjacent_to_digit |= text[i-1].isdigit()
+            adjacent_to_digit |= text[i - 1].isdigit()
         if i < len(text) - 1:
-            adjacent_to_digit |= text[i+1].isdigit()
+            adjacent_to_digit |= text[i + 1].isdigit()
 
         if adjacent_to_digit and text[i] in chars_to_match:
             return index
@@ -161,7 +155,6 @@ def match_any(text, patterns):
     """
     Returns all matches of the patterns in the text. Case insensitive.
     """
-
     matches = []
 
     for pattern in patterns:
@@ -176,7 +169,6 @@ def match_any(text, patterns):
 
 
 if __name__ == "__main__":
-
     entries = []
     dedicatee = None
     stcs = {}
@@ -189,7 +181,6 @@ if __name__ == "__main__":
                         "dedicatee": dedicatee,
                         "stc_nos": stcs
                     })
-
             dedicatee = extract_dedicatee(line)
             stcs = extract_stcs(line)
         else:

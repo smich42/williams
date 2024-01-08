@@ -12,7 +12,6 @@ from json import dumps
 
 class Citation:
     # Represents an EEBO entry and its details.
-
     CSV_COLNAME_DEDICATEE = "Dedicatee"
     CSV_COLNAME_STC = "STC number"
     CSV_COLNAME_TITLE = "Title"
@@ -25,7 +24,6 @@ class Citation:
     CSV_COLNAME_PUB_LANGUAGE = "Language of publication"
 
     def __init__(self, dedicatee, stc, citation_table):
-
         if citation_table is None:
             citation_table = {}
         # Defines conversion from the citation table to an EntryDetails object.
@@ -41,7 +39,6 @@ class Citation:
         self.language = citation_table.get("language of publication")
 
     def fieldnames():
-
         return [
             Citation.CSV_COLNAME_DEDICATEE,
             Citation.CSV_COLNAME_STC,
@@ -56,7 +53,6 @@ class Citation:
         ]
 
     def to_dict(citation):
-
         return {
             field: val for field, val in zip(Citation.fieldnames(), [
                 citation.dedicatee,
@@ -87,24 +83,20 @@ class Citation:
         return citation
 
     def __str__(self):
-
         return dumps(Citation.to_dict(self), indent=4)
 
 
 def show_document_formats_if_present(driver, loading_seconds=5):
-
     eebo_helper.click_by_id_if_present("showDocumentFormats",
                                        driver, loading_seconds=loading_seconds)
 
 
 def click_citation_details_link_if_present(driver, loading_seconds=5):
-
     eebo_helper.click_by_id_if_present("link_prefix_addFlashPageParameterformat_citation",
                                        driver, loading_seconds=loading_seconds)
 
 
 def extract_citation_table_from_html(page):
-
     soup = BeautifulSoup(page, features="html.parser")
     rows = soup.select('div[class*="display_record_indexing_row"]')
 
@@ -124,12 +116,10 @@ def extract_citation_table_from_html(page):
 
 
 def page_contains_stc(driver, stc):
-
     return f"STC (2nd ed.) / {stc}." in driver.page_source
 
 
 def scrape_citation_table(driver, url, stc, loading_seconds=5):
-
     driver.get(url)
     sleep(loading_seconds)
     eebo_helper.reject_cookies_if_present(driver)
@@ -145,7 +135,6 @@ def scrape_citation_table(driver, url, stc, loading_seconds=5):
 
 
 def save_citation(citation, save_path):
-
     with open(save_path, "a") as outf:
         writer = csv.DictWriter(outf, fieldnames=Citation.fieldnames())
         writer.writerow(Citation.to_dict(citation))
@@ -155,7 +144,6 @@ def save_citation(citation, save_path):
 
 
 def create_save_file(save_path):
-
     with open(save_path, "w") as outf:
         writer = csv.DictWriter(outf, fieldnames=Citation.fieldnames())
         writer.writeheader()
@@ -164,7 +152,6 @@ def create_save_file(save_path):
 
 
 def last_citation_saved(save_path):
-
     if not path.exists(save_path):
         return None
 
@@ -177,7 +164,6 @@ def last_citation_saved(save_path):
 
 
 def find_and_write_citations(entries, driver, save_path, overwrite=False):
-
     if overwrite or not path.exists(save_path):
         create_save_file(save_path)
 
@@ -197,17 +183,14 @@ def find_and_write_citations(entries, driver, save_path, overwrite=False):
         dedicatee = entry["dedicatee"]
 
         for stc, details in entry["stc_nos"].items():
-
             if not encountered_last_processed:
                 if last_processed.dedicatee == dedicatee and last_processed.stc == stc:
                     encountered_last_processed = True
-
                 continue
 
             print(f"Processing [{dedicatee} : {stc}].")
             # The first element in the dedication details is a list of all its potentially matching urls.
             for url in details[0]:
-
                 table = scrape_citation_table(driver, url, stc)
 
                 if table is None or len(table.keys()) == 0:
@@ -218,7 +201,6 @@ def find_and_write_citations(entries, driver, save_path, overwrite=False):
 
 
 if __name__ == "__main__":
-
     WILLIAMS_URL_PATH = "resource/williams_with_urls.json"
     WILLIAMS_DETAILS_PATH = "resource/citations.csv"
 
@@ -237,6 +219,5 @@ if __name__ == "__main__":
 
         find_and_write_citations(entries, driver, args.outf,
                                  overwrite=args.overwrite)
-
     finally:
         driver.close()

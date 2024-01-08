@@ -9,7 +9,6 @@ import warnings
 
 
 def scrape_result_urls(stc, driver, loading_seconds=5):
-
     driver.get("https://www.proquest.com/eebo/commandline")
 
     sleep(loading_seconds)
@@ -31,7 +30,6 @@ def scrape_result_urls(stc, driver, loading_seconds=5):
 
 
 def write_entries(entries, previously_processed, save_path, backup_path):
-
     # If we have an output file already, create a backup before overwriting.
     if path.exists(save_path):
         with open(save_path, "r") as sf, open(backup_path, "w") as bf:
@@ -49,7 +47,6 @@ def write_entries(entries, previously_processed, save_path, backup_path):
 
 
 def get_entries(path_for_plain, path_for_urls, overwrite=False):
-
     entries = None
     # Try to resume processing.
     if not overwrite:
@@ -64,7 +61,6 @@ def get_entries(path_for_plain, path_for_urls, overwrite=False):
 
 
 def add_urls(entries, driver, previously_processed, save_every, save_path, backup_path):
-
     print(f"Beginning at entry {previously_processed + 1}.")
 
     processed = previously_processed
@@ -89,7 +85,6 @@ def add_urls(entries, driver, previously_processed, save_every, save_path, backu
 
 
 if __name__ == "__main__":
-
     WILLIAMS_PLAIN_PATH = "resource/williams.json"
     WILLIAMS_URL_PATH = "resource/williams_with_urls.json"
     WILLIAMS_BACKUP_PATH = "resource/williams_with_urls-old.json"

@@ -6,7 +6,6 @@ import json
 
 
 def redirect_to_login(driver, login_timer):
-
     driver.get("https://www.proquest.com/eebo/myresearch/signin")
 
     print("Please log in.", login_timer, "seconds allocated.")
@@ -27,20 +26,17 @@ def click_by_id_if_present(id, driver, loading_seconds):
 
 
 def reject_cookies_if_present(driver, loading_seconds=5):
-
     click_by_id_if_present("onetrust-reject-all-handler",
                            driver, loading_seconds=loading_seconds)
 
 
 def read_entries(json_path):
-
     with open(json_path, "r") as inf:
         in_json = json.loads(inf.read())
         return in_json["entries"]
 
 
 def read_processed_entries_only(json_path):
-
     if path.exists(json_path):
         with open(json_path, "r") as outf:
             out_json = json.loads(outf.read())
