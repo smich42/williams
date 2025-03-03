@@ -1,13 +1,14 @@
 import argparse
 import csv
-from os import path
 import eebo_helper
+import re
 from time import sleep
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from json import dumps
+from os import path
 
 
 class Citation:
@@ -116,7 +117,8 @@ def extract_citation_table_from_html(page):
 
 
 def page_contains_stc(driver, stc):
-    return f"STC (2nd ed.) / {stc}." in driver.page_source
+    pattern = rf"STC \(2nd ed.\) / {re.escape(stc)}(?![\d.])"
+    return re.search(pattern, driver.page_source) is not None
 
 
 def scrape_citation_table(driver, url, stc, loading_seconds=5):
